@@ -9,8 +9,8 @@ import termcolor
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from setuptools import find_packages, setup
 
-from ivbscript import __version__
-from ivbscript.kernel import VBScriptKernel
+from iBatch import __version__
+from iBatch.kernel import BatchKernel
 
 
 class RegistryWrongValue(Exception):
@@ -73,15 +73,16 @@ def register_tlbinf32_if_needed():
 
 def is_kernel_spec_installed() -> bool:
     try:
-        KernelSpecManager().get_kernel_spec(VBScriptKernel.language)
+        KernelSpecManager().get_kernel_spec(BatchKernel.language)
         return True
     except NoSuchKernel:
         return False
 
 
 def install_kernel_spec():
-    default_spec_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'defaultspec')
-    KernelSpecManager().install_kernel_spec(default_spec_dir, VBScriptKernel.language, prefix=sys.prefix)
+    # default_spec_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'defaultspec')
+    default_spec_dir = os.path.dirname(os.path.abspath(__file__))
+    KernelSpecManager().install_kernel_spec(default_spec_dir, BatchKernel.language, prefix=sys.prefix)
 
 
 def install_kernel_spec_if_needed():
@@ -92,25 +93,25 @@ def install_kernel_spec_if_needed():
         print('Kernel Already Installed')
 
 
-allow_ansi_console_color_if_needed()
-register_tlbinf32_if_needed()
+# allow_ansi_console_color_if_needed()
+#register_tlbinf32_if_needed()
 install_kernel_spec_if_needed()
 
 with open('requirements.txt', 'r') as f:
     REQUIREMENTS = f.readlines()
 
 setup(
-    name="ivbscript",
+    name="iBatch",
     version=__version__,
     packages=find_packages(),
-    description="VBScript Jupyter Kernel",
+    description="Batch Jupyter Kernel",
     classifiers=[
-        'Programming Language :: VBScript',
+        'Programming Language :: Batch',
         "Programming Language :: Python :: 3"
         "Operating System :: Windows"
     ],
     entry_points={
-        'console_scripts': ['ivbscript=ivbscript.app:main']
+        'console_scripts': ['iBatch=iBatch.app:main']
     },
     install_requires=REQUIREMENTS,
     python_requires='>=3.8',

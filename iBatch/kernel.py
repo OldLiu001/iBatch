@@ -1,5 +1,5 @@
 """
-Jupyter kernel implementation for VBScript
+Jupyter kernel implementation for Batch
 """
 import os
 import random
@@ -16,34 +16,35 @@ import psutil
 import termcolor
 import win32clipboard
 from ipykernel.kernelbase import Kernel
-from pygments.lexers import _vbscript_builtins
+# from pygments.lexers import _Batch_builtins
 
 from .history import HistoryManager
 
 __version__ = '1.0.0'
 
 
-class VBScriptKernel(Kernel):
+class BatchKernel(Kernel):
     """
-    VBScript Kernel class
+    Batch Kernel class
     """
-    implementation = 'iVBScript'
-    language = "vbscript"
+    implementation = 'iBatch'
+    language = "Batch"
     implementation_version = __version__
-    banner = termcolor.colored(r'''
-d8b 888     888 888888b.    .d8888b.                   d8b          888
-Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
-    888     888 888  .88P  Y88b.                                    888
-888 Y88b   d88P 8888888K.   "Y888b.    .d8888b 888d888 888 88888b.  888888
-888  Y88b d88P  888  "Y88b     "Y88b. d88P"    888P"   888 888 "88b 888
-888   Y88o88P   888    888       "888 888      888     888 888  888 888
-888    Y888P    888   d88P Y88b  d88P Y88b.    888     888 888 d88P Y88b.
-888     Y8P     8888888P"   "Y8888P"   "Y8888P 888     888 88888P"   "Y888
-                                                           888
-                                                           888
-                                                           888
-    ''', color=random.choice(list(termcolor.COLORS)))
-    INTERPRETER = 'cscript.exe'
+#     banner = termcolor.colored(r'''
+# d8b 888     888 888888b.    .d8888b.                   d8b          888
+# Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
+#     888     888 888  .88P  Y88b.                                    888
+# 888 Y88b   d88P 8888888K.   "Y888b.    .d8888b 888d888 888 88888b.  888888
+# 888  Y88b d88P  888  "Y88b     "Y88b. d88P"    888P"   888 888 "88b 888
+# 888   Y88o88P   888    888       "888 888      888     888 888  888 888
+# 888    Y888P    888   d88P Y88b  d88P Y88b.    888     888 888 d88P Y88b.
+# 888     Y8P     8888888P"   "Y8888P"   "Y8888P 888     888 88888P"   "Y888
+#                                                            888
+#                                                            888
+#                                                            888
+#     ''', color=random.choice(list(termcolor.COLORS)))
+    banner = termcolor.colored('iBatch', color=random.choice(list(termcolor.COLORS)))
+    INTERPRETER = 'CMD.exe'
     COMMAND_LINE_TIMEOUT = 15
     incomplete_indent = '  '
     completion_regexes = {
@@ -65,8 +66,8 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
     def language_info(self):
         return {
             "name": self.language,
-            "file_extension": ".vbs",
-            "pygments_lexer": "vbscript",
+            "file_extension": ".bat",
+            "pygments_lexer": "Batch",
         }
 
     def __init__(self, **kwargs):
@@ -79,15 +80,15 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
         pid = os.getpid()
 
         self.history_manager = HistoryManager(self.get_history_path())
-        self.cscript = None
+        self.CMD = None
         self.stdout_pos = 0
         self.stdout_file_path = os.path.join(runtime_data_dir, f'{pid}.stdout')
         self.stderr_file_path = os.path.join(runtime_data_dir, f'{pid}.stderr')
         self.input_file_path = os.path.join(runtime_data_dir, f'{pid}.input')
         debug_log = os.path.join(runtime_data_dir, f'{pid}.log')
 
-        os.environ.update({'IVBS_CMD_PATH': self.input_file_path, 'IVBS_RET_PATH': self.stderr_file_path,
-                           'IVBS_DEBUG_PATH': debug_log})
+        os.environ.update({'IBAT_CMD_PATH': self.input_file_path, 'IBAT_RET_PATH': self.stderr_file_path,
+                           'IBAT_DEBUG_PATH': debug_log})
         self.run()
 
     @classmethod
@@ -100,10 +101,10 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
     def run(self):
         self.history_manager.connect()
         with open(self.stdout_file_path, 'w') as stdout_file:
-            self.cscript = Popen([
+            self.CMD = Popen([
                 self.INTERPRETER,
-                '//nologo',
-                'interpreter.vbs'
+                '/c', #//nologo
+                'interpreter.bat'
             ], stdout=stdout_file, stderr=stdout_file, shell=False, env=os.environ.copy())
 
     def _get_stdout(self) -> str:
@@ -130,8 +131,9 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
         with open(self.input_file_path, 'w', encoding='utf-8') as input_file:
             input_file.write("\n".join(code.splitlines()))
 
-    def _handle_vbscript_command(self, code: str, try_evaluate: bool = True, force_evaluate: bool = False) -> Dict:
-        inspect_prefix = 'oInterpreter.HandleInspect '
+    def _handle_Batch_command(self, code: str, try_evaluate: bool = True, force_evaluate: bool = False) -> Dict:
+        # inspect_prefix = 'oInterpreter.HandleInspect '
+        inspect_prefix = ''
         if not try_evaluate and force_evaluate:
             return {'stderr': 'Error: cant force_evaluate and not try_evaluate'}
         should_evaluate = False
@@ -149,7 +151,7 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
         output['stdout'] = self._get_stdout()
         if not force_evaluate and should_evaluate and output.get('stderr', False):
             code = code.replace(inspect_prefix, '')
-            output = self._handle_vbscript_command(code, try_evaluate=False)
+            output = self._handle_Batch_command(code, try_evaluate=False)
         return output
 
     def _handle_magic(self, code: str) -> Dict:
@@ -176,7 +178,7 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
         output = {}
         try:
             with open(file_path, 'r') as code_file:
-                output.update(self._handle_vbscript_command(code_file.read()))
+                output.update(self._handle_Batch_command(code_file.read()))
         except (FileNotFoundError, PermissionError, OSError) as exception:
             output['stderr'] = (''.join(traceback.format_exception(None, exception, None)))
         return output
@@ -215,9 +217,9 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
         elif code.startswith('%'):
             output = self._handle_magic(code[1:])
         elif code.endswith('?'):
-            output = self._handle_vbscript_command(code[:-1], force_evaluate=True)
+            output = self._handle_Batch_command(code[:-1], force_evaluate=True)
         else:
-            output = self._handle_vbscript_command(code)
+            output = self._handle_Batch_command(code)
         return output
 
     # pylint: disable=too-many-arguments
@@ -242,14 +244,15 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
     # pylint: enable=too-many-arguments
 
     def _is_interpreter_running(self) -> bool:
-        return not self.cscript.poll()
+        return not self.CMD.poll()
 
     def _shutdown_cleanup(self):
         self.history_manager.disconnect()
-        self._send_command('WScript.Quit')
+        # self._send_command('WScript.Quit')
+        self._send_command('Exit')
         time.sleep(2)
         if self._is_interpreter_running():
-            self.cscript.kill()
+            self.CMD.kill()
 
     def do_shutdown(self, restart):
         self._shutdown_cleanup()
@@ -298,11 +301,14 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
     # pylint: enable=too-many-arguments
 
     def do_complete(self, code, cursor_pos):
-        all_builtins = (_vbscript_builtins.BUILTIN_CONSTANTS
-                        + _vbscript_builtins.BUILTIN_FUNCTIONS
-                        + _vbscript_builtins.BUILTIN_VARIABLES
-                        + _vbscript_builtins.KEYWORDS
-                        + _vbscript_builtins.OPERATOR_WORDS)
+        # 关键字列表
+        # pygments里边没有bat的，有空考虑给做个贡献（x
+        # all_builtins = (_Batch_builtins.BUILTIN_CONSTANTS
+        #                 + _Batch_builtins.BUILTIN_FUNCTIONS
+        #                 + _Batch_builtins.BUILTIN_VARIABLES
+        #                 + _Batch_builtins.KEYWORDS
+        #                 + _Batch_builtins.OPERATOR_WORDS)
+        all_builtins = []
 
         # get relevant initial if is a function/sub argument/start of line/after a whitespace
         search_results = re.search(r'(\s+|[&,\(])?(?P<initial>\w+)$', code[:cursor_pos])
@@ -320,7 +326,7 @@ Y8P 888     888 888  "88b  d88P  Y88b                  Y8P          888
                 'status': 'ok'}
 
     def _terminate_app(self):
-        self.cscript.terminate()
+        self.CMD.terminate()
         cur_process = psutil.Process()
         parent_process = cur_process.parent()
         parent_process.terminate()
