@@ -10,6 +10,5 @@ Run:
 
 ```
 jupyter console --kernel batch
-
 ```
 

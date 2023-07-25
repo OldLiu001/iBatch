@@ -80,6 +80,11 @@ class BatchKernel(Kernel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        import locale
+        self.encoding = 'gbk' if locale.getdefaultlocale()[0] == 'zh_CN' else 'utf-8'
+        
+
         assert find_executable(self.INTERPRETER), f'Could not find {self.INTERPRETER}'
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         runtime_data_dir = os.path.join(os.getcwd(), 'runtime_data')
@@ -127,7 +132,7 @@ class BatchKernel(Kernel):
             process = Popen(shlex.split(code), stderr=PIPE, stdout=PIPE)
             try:
                 stdout, stderr = process.communicate(timeout=self.COMMAND_LINE_TIMEOUT)
-                return {'stdout': stdout.decode('utf-8'), 'stderr': stderr.decode('utf-8')}
+                return {'stdout': stdout.decode(self.encoding), 'stderr': stderr.decode(self.encoding)}
             finally:
                 process.terminate()
         except (FileNotFoundError, TimeoutExpired) as exception:
@@ -136,7 +141,7 @@ class BatchKernel(Kernel):
     def _send_command(self, code: str):
         if os.path.exists(self.stderr_file_path):
             os.remove(self.stderr_file_path)
-        with open(self.input_file_path, 'w', encoding='utf-8') as input_file:
+        with open(self.input_file_path, 'w', encoding=self.encoding) as input_file:
             input_file.write("\n".join(code.splitlines()))
 
     def _handle_Batch_command(self, code: str, try_evaluate: bool = True, force_evaluate: bool = False) -> Dict:
@@ -163,8 +168,8 @@ class BatchKernel(Kernel):
         #print("b")
 
         # 读stderr和stdout
-        # with open(self.stderr_file_path, 'r', encoding='utf-8') as stderr_file:
-        with open(self.stderr_file_path, 'r', encoding='gbk') as stderr_file:
+        # with open(self.stderr_file_path, 'r', encoding=self.encoding) as stderr_file:
+        with open(self.stderr_file_path, 'r', encoding=self.encoding) as stderr_file:
             output['stderr'] = stderr_file.read()
         os.remove(self.stderr_file_path)
         output['stdout'] = self._get_stdout()
