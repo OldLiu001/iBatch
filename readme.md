@@ -3,7 +3,7 @@
 Install:
 
 ```
-python setup.py
+python setup.py devolop
 ```
 
 Run:
