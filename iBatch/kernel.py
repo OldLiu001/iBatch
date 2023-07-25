@@ -12,6 +12,14 @@ from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
 from typing import Dict
 
+# 关掉warning
+#import sys
+#if sys.platform == 'win32':
+#    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+
+
+
 import psutil
 import termcolor
 import win32clipboard
@@ -84,7 +92,7 @@ class BatchKernel(Kernel):
         self.stdout_pos = 0
         self.stdout_file_path = os.path.join(runtime_data_dir, f'{pid}.stdout')
         self.stderr_file_path = os.path.join(runtime_data_dir, f'{pid}.stderr')
-        self.input_file_path = os.path.join(runtime_data_dir, f'{pid}.input')
+        self.input_file_path = os.path.join(runtime_data_dir, f'{pid}.input.cmd')
         debug_log = os.path.join(runtime_data_dir, f'{pid}.log')
 
         os.environ.update({'IBAT_CMD_PATH': self.input_file_path, 'IBAT_RET_PATH': self.stderr_file_path,
@@ -141,14 +149,26 @@ class BatchKernel(Kernel):
             if force_evaluate or self._should_evaluate(code):
                 should_evaluate = True
                 code = f'{inspect_prefix}{code}'
+
+        #todo 大改
+
+        # 执行
         self._send_command(code)
+
+        # 判断是否执行完成
+        #print("a", self.stderr_file_path)
         while not os.path.exists(self.stderr_file_path):
             time.sleep(1)
         output = {}
-        with open(self.stderr_file_path, 'r', encoding='utf-8') as stderr_file:
+        #print("b")
+
+        # 读stderr和stdout
+        # with open(self.stderr_file_path, 'r', encoding='utf-8') as stderr_file:
+        with open(self.stderr_file_path, 'r', encoding='gbk') as stderr_file:
             output['stderr'] = stderr_file.read()
         os.remove(self.stderr_file_path)
         output['stdout'] = self._get_stdout()
+
         if not force_evaluate and should_evaluate and output.get('stderr', False):
             code = code.replace(inspect_prefix, '')
             output = self._handle_Batch_command(code, try_evaluate=False)

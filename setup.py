@@ -80,8 +80,8 @@ def is_kernel_spec_installed() -> bool:
 
 
 def install_kernel_spec():
-    # default_spec_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'defaultspec')
-    default_spec_dir = os.path.dirname(os.path.abspath(__file__))
+    default_spec_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kernelspec')
+    # default_spec_dir = os.path.dirname(os.path.abspath(__file__))
     KernelSpecManager().install_kernel_spec(default_spec_dir, BatchKernel.language, prefix=sys.prefix)
 
 
@@ -95,7 +95,8 @@ def install_kernel_spec_if_needed():
 
 # allow_ansi_console_color_if_needed()
 #register_tlbinf32_if_needed()
-install_kernel_spec_if_needed()
+# install_kernel_spec_if_needed()
+install_kernel_spec()
 
 with open('requirements.txt', 'r') as f:
     REQUIREMENTS = f.readlines()
