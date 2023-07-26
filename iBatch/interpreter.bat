@@ -1,5 +1,6 @@
 
 @echo off
+setlocal ENABLEDELAYEDEXPANSION
 rem echo hello,world > "D:\@Resources\±à³Ì\@Repositories\iBatch\iBatch\runed.txt"
 :loop
 if exist "%IBAT_CMD_PATH%" (
