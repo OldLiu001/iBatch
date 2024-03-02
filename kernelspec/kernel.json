@@ -1,0 +1,6 @@
+{
+    "argv": ["python", "-m", "iBatch", "-f", "{connection_file}"],
+    "display_name": "Batch File",
+    "language": "batchfile",
+    "interrupt_mode": "message"
+}

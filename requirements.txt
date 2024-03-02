@@ -1,0 +1,5 @@
+pygments
+psutil
+termcolor
+ipykernel
+jupyter-console
